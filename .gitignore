@@ -1,0 +1,19 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+
+# Local analytical store + raw seed copies (seed once, load from disk)
+data/raw/
+data/*.duckdb
+data/*.duckdb.wal
+data/*.parquet
+
+# Secrets / local overrides
+*.pem
+service-account*.json

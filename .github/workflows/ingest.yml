@@ -1,0 +1,38 @@
+name: Hourly USGS ingest
+
+on:
+  schedule:
+    # USGS live feed updates continuously; hourly batch is the well-trodden path.
+    - cron: "17 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Ingest recent earthquakes
+        env:
+          # Never commit tokens — configure in repo Settings → Secrets and variables → Actions
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+          DUCKDB_DATABASE: earthquakes
+          INGEST_LOOKBACK_HOURS: "48"
+        run: python src/ingest.py
+
+      - name: Print store tip on missing secret
+        if: failure()
+        run: |
+          echo "If this failed with an auth/connect error, add repo secret MOTHERDUCK_TOKEN"
+          echo "from https://motherduck.com (free tier) and re-run via workflow_dispatch."
