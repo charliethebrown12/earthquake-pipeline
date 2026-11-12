@@ -19,7 +19,7 @@ USGS recent window ──(GitHub Actions hourly)──┘ upsert on event id
 | 1 Source | USGS Earthquakes | Schema-consistent history + live feed, no API key |
 | 2 Ingest | GitHub Actions (`cron` hourly) | Free, version-controlled, runs while the laptop sleeps |
 | 3 Buffer | None (direct write) | Volume is small; less cost/ops |
-| 4 Store | Local DuckDB for seed/dev; MotherDuck for hosted trickle | Fast laptop seed; cloud store keeps the dashboard alive |
+| 4 Store | Local DuckDB for seed/dev; MotherDuck for hosted trickle | Fast laptop seed; cloud store keeps the dashboard alive. Pin `duckdb==1.5.6` (MotherDuck does not support DuckDB 2.x yet). |
 | 5 Prove alive | Streamlit | Quakes/day chart + last-week map + ingest run log |
 
 ## Quick start (local)
