@@ -46,7 +46,11 @@ CREATE TABLE IF NOT EXISTS pipeline_runs (
 def connect() -> duckdb.DuckDBPyConnection:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     if MOTHERDUCK_TOKEN:
-        con = duckdb.connect(f"md:{DUCKDB_DATABASE}?motherduck_token={MOTHERDUCK_TOKEN}")
+        # Attach (or create) the named MotherDuck database, then USE it.
+        # Connecting to md:<name> fails if the DB has never been created.
+        con = duckdb.connect(f"md:?motherduck_token={MOTHERDUCK_TOKEN}")
+        con.execute(f'CREATE DATABASE IF NOT EXISTS "{DUCKDB_DATABASE}"')
+        con.execute(f'USE "{DUCKDB_DATABASE}"')
     else:
         con = duckdb.connect(str(LOCAL_DB_PATH))
     con.execute(DDL)
