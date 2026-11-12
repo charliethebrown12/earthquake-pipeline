@@ -87,11 +87,11 @@ c4.metric("Last ingested_at", str(last_ingest)[:19])
 st.subheader("Quakes per day")
 fig = px.bar(daily, x="day", y="quakes", labels={"day": "Day (UTC)", "quakes": "Count"})
 fig.update_layout(margin=dict(l=10, r=10, t=30, b=10), height=360)
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width="stretch")
 
 st.subheader("Map — last 7 days")
 cutoff = pd.Timestamp(newest) - pd.Timedelta(days=7)
-week = quakes[quakes["time"] >= cutoff].copy()
+week = quakes[pd.to_datetime(quakes["time"]) >= cutoff].copy()
 st.write(f"{len(week):,} events since {cutoff} (relative to newest event in store)")
 
 if week.empty:
@@ -108,7 +108,7 @@ else:
         week.sort_values("time", ascending=False)[
             ["time", "mag", "place", "depth_km", "latitude", "longitude"]
         ].head(50),
-        use_container_width=True,
+        width="stretch",
     )
 
 st.subheader("Pipeline liveness")
@@ -119,16 +119,18 @@ st.write(
 if runs.empty:
     st.info("No pipeline_runs yet.")
 else:
-    st.dataframe(runs, use_container_width=True)
+    st.dataframe(runs, width="stretch")
 
 # Recommended demo: today vs historical daily average
 st.subheader("Today vs historical daily average")
 if not daily.empty:
-    today = pd.Timestamp(newest).date()
-    today_count = int(daily.loc[daily["day"] == today, "quakes"].sum()) if today in set(daily["day"]) else 0
-    hist = daily[daily["day"] < today]
+    # MotherDuck/DuckDB may return DATE as datetime64; normalize before comparing.
+    day_vals = pd.to_datetime(daily["day"]).dt.normalize()
+    today = pd.Timestamp(newest).normalize()
+    today_count = int(daily.loc[day_vals == today, "quakes"].sum())
+    hist = daily.loc[day_vals < today]
     avg = float(hist["quakes"].mean()) if not hist.empty else float("nan")
     st.write(
-        f"Events on **{today}** (partial day OK): **{today_count}**. "
+        f"Events on **{today.date()}** (partial day OK): **{today_count}**. "
         f"Average across earlier seeded days: **{avg:.1f}**."
     )
